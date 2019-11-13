@@ -1,0 +1,36 @@
+/* div > div.container.text-center  {
+    background: black !important;
+} */
+.pdfCanvas {
+    background:#3e3e3e !important;
+}
+.ant-menu-item.ant-menu-item-disabled {
+    color: white !important;
+}
+.react-pdf__Page__canvas {
+    margin-left: auto;
+    margin-right: auto;
+}
+.react-pdf__Page {
+    margin-top: 5px;
+    margin-bottom: 5px;
+}
+.tool-box {
+    -webkit-box-sizing: content-box;
+    -moz-box-sizing: content-box;
+    box-sizing: content-box;
+    padding: 20px;
+    overflow: hidden;
+    border: 1px solid rgba(224,224,224,1);
+    -webkit-border-radius: 4px;
+    border-radius: 4px;
+    /* font: normal 16px/1 "Times New Roman", Times, serif; */
+    text-align: center;
+    -o-text-overflow: ellipsis;
+    text-overflow: ellipsis;
+    background: rgba(247,247,247,1);
+    -webkit-box-shadow: -1px -1px 1px 1px rgba(220,220,220,1) ;
+    box-shadow: -1px -1px 1px 1px rgba(220,220,220,1) ;
+    text-shadow: 1px 1px 1px rgba(0,0,0,0.2) ;
+    z-index: 99999;
+  }
