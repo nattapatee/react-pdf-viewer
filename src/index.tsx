@@ -23,7 +23,12 @@ class App extends React.Component {
     numPages: null,
     pageNumber: 1,
     scale: 1.0,
-    scaleString: "100%"
+    scaleString: "100%",
+    renderAnnotationLayer: true,
+    renderInteractiveForms: true,
+    renderMode: 'canvas',
+    renderTextLayer: true,
+    rotate: null
   };
   showModal = () => {
     this.setState({
@@ -32,7 +37,10 @@ class App extends React.Component {
   };
 
   onDocumentLoadSuccess = ({ numPages }) => {
-    this.setState({ numPages });
+    this.setState({
+      numPages,
+      pageNumber: 1,
+    });
   };
 
   handleOk = e => {
@@ -42,16 +50,16 @@ class App extends React.Component {
     });
   };
   public zoomIn = value => {
-    if(this.state.scale != 2.0) {
+    if (this.state.scale != 2.0) {
       let value = this.state.scale + 0.5
-      this.setState({scale: value})
+      this.setState({ scale: value })
 
     }
   }
   public zoomOut = value => {
-    if(this.state.scale != 0.5) {
+    if (this.state.scale != 0.5) {
       let value = this.state.scale - 0.5
-      this.setState({scale: value})
+      this.setState({ scale: value })
 
     }
   }
@@ -61,8 +69,68 @@ class App extends React.Component {
       visible: false
     });
   };
+  public testFuntion = () => {
+    console.log("test")
+  }
+  previousPage = () => this.changePage(-1);
+
+  nextPage = () => this.changePage(1);
+
+  changePage = offset => this.setState(prevState => ({
+    pageNumber: (prevState.pageNumber || 1) + offset,
+  }));
+
+  onPageRenderSuccess = page => console.log('Rendered a page', page);
+
+  rotateLeft = () => {
+    this.setState(prevState => ({ rotate: (prevState.rotate + (-90) + 360) % 360 }));
+  }
+
+  rotateRight = () => {
+    this.setState(prevState => ({ rotate: (prevState.rotate + 90 + 360) % 360 }));
+  }
+
+  changeRotation = by => {
+  }
+  get pageProps() {
+    const {
+      scale,
+      renderAnnotationLayer,
+      renderInteractiveForms,
+      renderMode,
+      renderTextLayer,
+    } = this.state;
+
+    return {
+      className: 'custom-classname-page',
+      onClick: (event, page) => console.log('Clicked a page', { event, page }),
+      onRenderSuccess: this.onPageRenderSuccess,
+      scale: scale,
+      renderAnnotationLayer,
+      renderInteractiveForms,
+      renderMode,
+      renderTextLayer,
+      customTextRenderer: textItem => (
+        textItem.str
+          .split('ipsum')
+          .reduce((strArray, currentValue, currentIndex) => (
+            currentIndex === 0
+              ? ([...strArray, currentValue])
+              : ([...strArray, (
+                // eslint-disable-next-line react/no-array-index-key
+                <mark key={currentIndex}>
+                  ipsum
+                </mark>
+              ), currentValue])
+          ), [])
+      ),
+    };
+  }
+
   render() {
     let { pageNumber, numPages } = this.state;
+    const { pageProps } = this;
+
     return (
       <div>
         {/* <div>
@@ -98,12 +166,14 @@ class App extends React.Component {
         <Document
           file="https://asp.demosoft.me/api/files/fileName/github.pdf"
           onLoadSuccess={this.onDocumentLoadSuccess}
+          rotate={this.state.rotate}
           options={{
             cMapUrl: `//cdn.jsdelivr.net/npm/pdfjs-dist@${pdfjs.version}/cmaps/`,
             cMapPacked: true
           }}
+          loading={<Center><Spin style={{position: "absolute",bottom: "60%"}} size="large" tip="กำลังโหลดเอกสาร..."/></Center>}
         >
-          <div className="tool-box" style={{ width: "98vw",position: "fixed" }}> <Icon type="close" style={{float: "left"}}/><span>github.pdf</span> <Button
+          <div className="tool-box" style={{ width: "98vw", position: "fixed" }}> <Icon className="closeBtn" type="close" style={{ float: "left" }} /><span>github.pdf</span> <Button
             type="primary"
             shape="round"
             icon="download"
@@ -111,25 +181,53 @@ class App extends React.Component {
           >
             ดาวน์โหลดเอกสาร
           </Button></div>
-  <div style={{paddingTop: "60px",background: "whitesmoke"}}>
-          {Array.from(new Array(numPages), (el, index) => (
-            <Page key={`page_${index + 1}`} scale={this.state.scale} pageNumber={index + 1} />
-          ))}
-          <Center>
-          <div
-            className="tool-box"
-            style={{ width: "60%", marginLeft: "auto", marginRight: "auto" ,position: "fixed",bottom: 0}}
-          >
-            {" "}
-            <p>
-            <Row>
-      <Col span={8}>Page {pageNumber} of {numPages} </Col>
-      <Col span={8}><Button shape="circle" icon="zoom-in" onClick={this.zoomIn} style={{margin: "0px 5px 0px 5px"}}/> <Input value="100%" style={{width: 200,margin: "0px 5px 0px 5px"}} /><Button shape="circle" icon="zoom-out" onClick={this.zoomOut} style={{margin: "0px 5px 0px 5px"}}/></Col>
-      <Col span={8}>col-8</Col>
-    </Row>
-            </p>
-          </div>
-          </Center>
+          <div style={{ paddingTop: "60px", background: "whitesmoke" }}>
+            {
+              Array.from(
+                new Array(numPages),
+                (el, index) => (
+                  <Page
+                    {...pageProps}
+                    key={`page_${index + 1}`}
+                    inputRef={
+                      (pageNumber === index + 1)
+                        ? (ref => ref && ref.scrollIntoView())
+                        : null
+                    }
+                    pageNumber={index + 1}
+                  />
+                ),
+              )
+            }
+            {/* {Array.from(new Array(numPages), (el, index) => (
+            <Page onLoadSuccess={this.testFuntion} key={`page_${index + 1}`} scale={this.state.scale} pageNumber={index + 1} />
+          ))} */}
+            <Center>
+              <div className="tool-box" style={{position: "fixed", bottom: 20}}
+>
+
+              </div>
+              <div
+                className="tool-box"
+                style={{ width: "60vw", marginLeft: "auto", marginRight: "auto", position: "fixed", bottom: 0 }}
+              >
+                {" "}
+                <p>
+                  <Row>
+                    <Col span={10}> <Button shape="circle" icon="zoom-in" onClick={this.zoomIn} style={{ margin: "0px 5px 0px 5px" }} /> <Input value="100%" style={{ width: "30%", margin: "0px 5px 0px 5px" }} /><Button shape="circle" icon="zoom-out" onClick={this.zoomOut} style={{ margin: "0px 5px 0px 5px" }} /></Col>
+                    <Col span={9}>
+                    <Button shape="circle" icon="left" disabled={pageNumber <= 1}
+                      onClick={this.previousPage} style={{ margin: "0px 5px 0px 5px" }} /> {`หน้า ${pageNumber || (numPages ? 1 : '--')} จาก ${numPages || '--'}`}<Button shape="circle" icon="right" disabled={pageNumber >= numPages}
+                        onClick={this.nextPage} style={{ margin: "0px 5px 0px 5px" }} />
+                      </Col>
+                    <Col span={5}>
+                    <Button onClick={this.rotateLeft} shape="circle" icon="undo" style={{ margin: "0px 5px 0px 5px" }} />
+                    <Button onClick={this.rotateRight} shape="circle" icon="redo" style={{ margin: "0px 5px 0px 5px" }} />
+                    </Col>
+                  </Row>
+                </p>
+              </div>
+            </Center>
           </div>
         </Document>
       </div>
